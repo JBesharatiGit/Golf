@@ -13,7 +13,7 @@ namespace Golf
         {
             
            
-            #region Console Window Setting
+            #region Console Window Setting test
             //Console.BufferWidth = 100;
             Console.WindowWidth = 100;
             Console.WindowHeight = 50;
