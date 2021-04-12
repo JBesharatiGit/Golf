@@ -10,8 +10,7 @@ namespace Golf
     {
         public static Swing swing = new Swing();
          static void Main(string[] args)
-        {
-            
+         {
            
             #region Console Window Setting test
             //Console.BufferWidth = 100;
@@ -23,72 +22,113 @@ namespace Golf
 
             #region Kör i gång
 
-            char onOf = ' ';
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine();
+            Console.WriteLine("[I den här spel '*' visar boll position och 'O' visar Cup.]");
+            Console.WriteLine("[För att öka/minska Angle och Velocity anväder Arrowkey]");
+            Console.WriteLine("[ArrowKey L/R byter Heltal och U/D byter decimal del av tal.]");
+            Console.WriteLine("[För att confirmera varje steg använder ReturnKey.]");
 
-            while (swing.endFlag == false || (char.ToLower(onOf) != 'y' && char.ToLower(onOf) != 'n'))
+            Console.WriteLine("----------------------------------------------------------------------");
+            Console.ResetColor();
+
+            char onOf = ' ';
+            bool answer = false;
+            while (answer==false&&char.ToLower(onOf)!='y' && char.ToLower(onOf) != 'n')
             {
-                Console.Write("Kör i gång Golf(y/n)");
-                swing.endFlag = char.TryParse(Console.ReadLine(), out onOf);
+                Console.Write("Start Golf(y/n)");
+                char.TryParse(Console.ReadLine(),out  onOf);
             }
             
-            Console.Clear();
-
-            swing.printForm(ref swing.currentPosision);
-
-            swing.currentPosision = Console.CursorTop;
+            if (char.ToLower(onOf) == 'y')
+            {
+                swing.ExitFlag = false;
+                swing.endFlag = true;
+                Console.Clear();
+                swing.PrintForm(ref swing.currentPosision);
+                swing.currentPosision = Console.CursorTop;
+            }
+            else
+                swing.ExitFlag = true;
 
             #endregion Spel
 
-            
-            while (swing.endFlag == true)
+            while (swing.ExitFlag == false)
             {
-                try
+                while (swing.endFlag == true)
                 {
-                    swing.SelectVelocity();
-                    swing.Message("            ");
-                    swing.SelectAngle();
-                    swing.writePost();
+                    try
+                    {
+                        swing.SelectVelocity();//Sätter velocity värde för a swing
+                        swing.Message("            ");
+                        swing.SelectAngle();//Sätter Angle värde för a swing
+                        swing.WritePost();
 
-                    swing.MakeDecision(swing.LstPoints.Last().totalDistans);
+                        swing.MakeDecision(swing.LstPoints.Last().totalDistans);//bestämmer användare vinner eller förlorar,hur mycket spelaren försökte och bollen hamnar bort.
 
-                    swing.PrintPostBypost(1);
+                        swing.PrintPostBypost(1);//Skriver ut resultat av verje swing
+                    }
+                    catch (Exception e)
+                    {
+                        swing.Message(e.Message);
+                        Console.ReadKey();
+                    }
+                    if (swing.endFlag == true)
+                    {
+                        swing.Point = new Points();
+                        swing.Message(":>Next Enter");
+                        Console.ReadKey();
+                        swing.Message("");
+                    }
                 }
-                catch (Exception e)
-                {
 
-                    swing.Message(e.Message);
-                    Console.ReadKey();
-                    
-                
-                }
-                swing.Point = new Points();
-                swing.Message(":>Next Enter");
-                Console.ReadKey();
-                swing.Message("            ");
+                NextPlay();//Frågar från användaren om vill försöka en spel till
             }
-
+         }
+        public static void NextPlay()
+        {
+            swing.Message("Continue or end ?(y/n)");
+            ConsoleKeyInfo k; //= new ConsoleKeyInfo();
+            do
+            {
+                k = Console.ReadKey();
+            } while (char.ToLower(k.KeyChar) != 'y' && char.ToLower(k.KeyChar) != 'n');
+            
+            if (char.ToLower(k.KeyChar) == 'y')
+            {
+                swing = new Swing();
+                swing.ExitFlag = false;
+                swing.endFlag = true;
+                Console.Clear();
+                swing.PrintForm(ref swing.currentPosision);
+                swing.currentPosision = Console.CursorTop;
+                
+                //swing.LstPoints = new List<Points>();
+                
+            }
+            else
+                swing.ExitFlag = true;
         }
- 
+
     }
 
     class Swing
     {
         const double Gravity = 9.8;
         private double angleInRadians;
-        private  double cupPosition=52;
+        private const double cupPosition=52;
         public int counter = 0;
         public bool direction=true;
         public  int currentPosision = 0;
+        public bool ExitFlag = true;
         public bool endFlag = false;
-        double y=0;
-        double x=0;
         private  Points _points= new Points();
         public Points Point { get => _points; set => _points = value; }
         public List<Points> LstPoints = new List<Points>();
 
         public double CalcuateDistanc()
         {
-            double result = double.NaN;
+            double result; //= double.NaN;
             try
             {
                 angleInRadians = (Math.PI / 180) * Point.Angle;
@@ -103,8 +143,8 @@ namespace Golf
             return result;
 
 
-        }
-        public void writePost() 
+        }//Räknar ut avstånd som bollen kommer att röra sig på grund av Velocity och Angle som valde.
+        public void WritePost() //Lägger varje sting till Collection.
         {
             Point.Distans = CalcuateDistanc();
 
@@ -128,7 +168,7 @@ namespace Golf
         {
             try
             {
-                printPlayeLine();
+                PrintPlayeLine();
                 Console.SetCursorPosition((int)Point.totalDistans, 6);
                 Console.WriteLine('*');
             }
@@ -138,8 +178,8 @@ namespace Golf
                 Console.ReadKey();
             }
             
-        }
-        public void printPlayeLine()
+        }//Visar positionen som bollen hamnar(med hjälp av *) 
+        public void PrintPlayeLine()//skriver ut spel linje  
         {
             Console.SetCursorPosition((int)cupPosition, 5);
             Console.WriteLine("Cup");
@@ -150,10 +190,10 @@ namespace Golf
             Console.SetCursorPosition((int)cupPosition, 7);
             Console.WriteLine("+");
         } 
-        public void printForm(ref int currentPosision)
+        public void PrintForm(ref int currentPosision)
         {
 
-            printPlayeLine();
+            PrintPlayeLine();
             Console.SetCursorPosition(0, 10);
             Console.Write("Select Velocity(ArroKey):");
 
@@ -165,7 +205,7 @@ namespace Golf
             Console.WriteLine("Rad Angel Velocity Distance TotalDistance DistanceToHolle");
             Console.WriteLine("---------------------------------------------------------");
             currentPosision = Console.CursorTop;
-        }
+        }//striver ut tabel form
         public void PrintPostBypost(int oneRecord)
         {
             if (oneRecord==1)
@@ -184,14 +224,14 @@ namespace Golf
                     currentPosision = Console.CursorTop;
                 }
             }
-           
-        }
+
+        }//Skriver ut resultat av verje swing and total match resultat
         public void MakeDecision(double distance) 
         {
-            if ((distance>=cupPosition-0.5) && (distance <= cupPosition+0.5 ))
+            if ((distance>=cupPosition-0.2) && (distance <= cupPosition+0.2 ))
             {
                 DrawDistance();
-                Console.SetCursorPosition((int)52, 8);
+                Console.SetCursorPosition((int)cupPosition-4, 8);
                 Console.WriteLine("-->!<--");
                 Message("Goal");
                 PrintPostBypost(2);
@@ -222,12 +262,7 @@ namespace Golf
                 DrawDistance();
                 direction = true;
             }
-        }
-        public double CalcCordinat()
-        {
-            y = (-Gravity * Math.Pow(x, 2)) / (2 * Math.Pow(Point.Velocity, 2) * Math.Pow(Math.Cos(Point.Angle), 2)) + x * Math.Tan(Point.Angle);
-            return Math.Round(y, 2);
-        }
+        }//bestämmer användare vinner eller förlorar,hur mycket spelaren försökte och bollen hamnar bort och till sist ska spelen sluta eller förtsätta.
         public void SelectVelocity()
         {
             if (LstPoints.Count>0)
@@ -240,37 +275,33 @@ namespace Golf
             Console.Write("Select Velocity(ArroKey):");
             Console.ResetColor();
 
-            //Message("Use ArrowKey then Enter");
-            
             Point.Velocity=ArrowkeyControl(Point.Velocity,10);
 
             Console.SetCursorPosition(0, 10);
             Console.ResetColor();
             Console.Write("Select Velocity(ArroKey):");
-        }
+        }//Sätter velocity värde för a swing
         public void SelectAngle()
         {
             if (LstPoints.Count > 0)
             {
                 Point.Angle = LstPoints.Last().Angle;
             }
-            ConsoleKeyInfo k = new ConsoleKeyInfo();
             Console.SetCursorPosition(0, 11);
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write("Select Angle(ArroKey)   :");
             Console.ResetColor();
 
-            //Message("Use ArrowKey then Enter");
             Point.Angle = ArrowkeyControl(Point.Angle,11);
 
             Console.SetCursorPosition(0, 11);
             Console.ResetColor();
             Console.Write("Select Angle(ArroKey)   :");
 
-        }
+        }//Sätter Angle värde för a swing
         public double ArrowkeyControl(double p, int cell)
         {
-            ConsoleKeyInfo k = new ConsoleKeyInfo();
+            ConsoleKeyInfo k ;
             double d = 0.0;
             if (p > 0)
                 d = p;
@@ -282,6 +313,7 @@ namespace Golf
                         switch (k.Key)
                         {
                             case ConsoleKey.RightArrow:
+                                 Message(" ");
                                 d++;
                                 break;
                             case ConsoleKey.LeftArrow:
@@ -301,6 +333,7 @@ namespace Golf
                                 }
                                 break;
                             case ConsoleKey.UpArrow:
+                                Message(" ");
                                 d += 0.1;
                                 break;
 
@@ -308,7 +341,7 @@ namespace Golf
                                 break;
                             default:
                             {
-                                Console.SetCursorPosition(25, cell);
+                                Console.SetCursorPosition(26, cell);
                                 Console.Write("         ");
                                 throw new FormatException();
                             }
@@ -322,27 +355,21 @@ namespace Golf
                     }
   
                     Console.SetCursorPosition(26, cell);
+                    Console.Write("         ");
+                    Console.SetCursorPosition(26, cell);
                     d = Math.Round(d, 2);
                     Console.Write(d);
+                    
                 } while (k.Key != ConsoleKey.Enter);
             return d;
-        }
+        }//Byter Angle/Velocity värde med hjälp av Arrokeys(R/L/U/D) 
         public void Message(string message)
         {
             for (int i =12; i < 16; i++)
             {
-                Console.SetCursorPosition(0, 12);
+                Console.SetCursorPosition(0, i);
                 Console.WriteLine("                                                                                                   ");
             }
-            //Console.SetCursorPosition(0, 12);
-            //Console.WriteLine("                                                                                                   ");
-            //Console.SetCursorPosition(0, 13);
-            //Console.WriteLine("                                                                                                   ");
-            //Console.SetCursorPosition(0, 14);
-            //Console.WriteLine("                                                                                                   ");
-            //mydelay(500);
-            //Console.SetCursorPosition(0, 15);
-            //Console.WriteLine("                                                                                                   ");
 
             string helpMessage = "";
             string transfer = "";
@@ -363,16 +390,15 @@ namespace Golf
             Console.SetCursorPosition(0, 13);
             Console.Write(helpMessage);
             
-            mydelay(50);
+            Mydelay(50);
             Console.ResetColor();
 
-        }
-        public void mydelay(double seconds)
+        }//Skriver ut ut meddelande
+        public void Mydelay(double seconds)
         {
             DateTime d = DateTime.Now.AddMilliseconds(seconds);
             do { } while (DateTime.Now < d);
-        }
-  
+        }//Gör försening
     }
     public  class Points
     {
@@ -385,47 +411,5 @@ namespace Golf
         
     }
 
-    #region xy
-    //Point point = new Point();
-    //Point[] arrPoints = new Point[100];
-    //for (int i = 0; i < 100; i++)
-    //{
-    //    s.X = i;
-    //    point.x = s.X;
-    //    point.y = s.c();
-    //    arrPoints[i] = point;
-
-    //}
-    //foreach (var item in arrPoints)
-    //{
-    //    Console.WriteLine($"X = {item.x} Y = {item.y}");
-    //}
-    //for (int j = 0; j < 50; j++)
-    //{
-    //    if (j % 5 == 0)
-    //    {
-    //        Console.SetCursorPosition((int)arrPoints[j].x / 10, 100 - ((int)arrPoints[j].y) / 10);
-    //        Console.WriteLine('.');
-
-    //    }
-    //}
-    //============================
-    //public  class Point
-    //{
-    //    public double a;
-    //    public double b;
-
-    //    public double x;
-    //    public double y;
-    //    public double r;
-
-    //    public Point() { }
-    //    public double DistanceTo(Point pt) 
-    //    {
-    //        pt.y = Math.Sqrt(Math.Pow(pt.r, 2) - Math.Pow((pt.x - a), 2));
-
-    //        return Math.Round(pt.y - b,1);
-    //    }
-    //}
-    #endregion
+  
 }
